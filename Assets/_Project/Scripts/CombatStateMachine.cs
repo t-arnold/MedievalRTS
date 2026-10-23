@@ -16,8 +16,9 @@ public struct HitResult
 }
 
 /// <summary>
-/// Top-down 2D combat core, shared by the player and every NPC.
-/// Brains (PlayerController, EnemyAI) only send intents: SetAim, RequestAttack, RequestDodge, SetBlock.
+/// Top-down 2D combat core, shared by the player and every NPC (infantry, archers, cavalry).
+/// Brains (PlayerController, SoldierAI, CavalryAI) only send intents: SetAim, RequestAttack, RequestDodge, SetBlock.
+/// Melee attacks sweep an arc on the active frame; ranged attacks (AttackData.projectile) launch projectiles.
 ///
 /// Setup: sprite pivot at the FEET; a small Collider2D at the feet on a "Hurtbox" layer.
 /// Animator parameters: floats "DirX", "DirY" (set here), "Speed" (set by the controller).
@@ -28,6 +29,12 @@ public struct HitResult
 [RequireComponent(typeof(CombatStats))]
 public class CombatStateMachine : MonoBehaviour
 {
+    /// <summary>
+    /// Damage multiplier when an allied NPC hits the player by accident. Friendly fire stays on,
+    /// but your own soldiers' wild swings shouldn't be the main thing that kills you.
+    /// </summary>
+    public static float AllyHitsOnPlayerMultiplier = 0.3f;
+
     [Header("References")]
     public Animator animator;
     public LayerMask hurtboxMask = ~0;
@@ -35,6 +42,13 @@ public class CombatStateMachine : MonoBehaviour
     public int team;
     [Tooltip("Scales damage and poise damage this combatant deals (set by experience tier).")]
     public float outgoingDamageMultiplier = 1f;
+    public bool isPlayer;
+
+    [Header("Mounted")]
+    [Tooltip("Spears deal bonus damage to mounted units; mounted units can't dodge-roll.")]
+    public bool isMounted;
+    [Tooltip("Keep moving during windup/active/recovery (riders swing while galloping past).")]
+    public bool movesWhileAttacking;
 
     [Header("Aim")]
     public float turnSpeed = 1080f;
@@ -45,6 +59,8 @@ public class CombatStateMachine : MonoBehaviour
     public float blockAngle = 140f;
     public float parryWindow = 0.15f;
     [Range(0f, 1f)] public float blockChipDamage = 0.1f;
+    [Tooltip("Multiplies stamina lost when blocking (weapon-only blocks are worse than shields).")]
+    public float blockStaminaMultiplier = 1f;
     public float guardBreakDuration = 1.2f;
     public float parriedStaggerDuration = 1.3f;
 
@@ -70,10 +86,19 @@ public class CombatStateMachine : MonoBehaviour
     public float StateTime { get; private set; }
     public AttackData CurrentAttack { get; private set; }
     public CombatStats Stats { get; private set; }
+    public Rigidbody2D Body { get; private set; }
+    public UnitLoadout Loadout { get; set; }
     public Vector2 Facing { get; private set; } = Vector2.down;
+    /// <summary>How far away the aim point is (mouse distance, or the AI's target). Sets where arcing shots land.</summary>
+    public float AimDistance { get; private set; } = 6f;
+    public Vector2 AimPoint => (Vector2)transform.position + Facing * AimDistance;
     public bool IsFrozen => freezeTimer > 0f;
     public bool IsInvulnerable => State == CombatState.Dodging && StateTime >= iFrames.x && StateTime <= iFrames.y;
-    public bool CanMove => State == CombatState.Idle || State == CombatState.Blocking;
+    public bool CanMove => State == CombatState.Idle || State == CombatState.Blocking ||
+                           (movesWhileAttacking && (State == CombatState.Windup || State == CombatState.Active || State == CombatState.Recovery));
+
+    AttackTokens tokens;
+    public AttackTokens Tokens => tokens ? tokens : (tokens = GetComponent<AttackTokens>());
 
     /// <summary>Movement the combat system imposes (dodge, lunge, knockback). The controller adds it.</summary>
     public Vector2 ForcedVelocity
@@ -92,7 +117,7 @@ public class CombatStateMachine : MonoBehaviour
     // ---- events: hook smears, hit-flash, audio, screen shake, UI, AI ----
     public event Action<CombatState, CombatState> OnStateChanged; // (from, to)
     public event Action<AttackData> OnTelegraph;                  // windup began
-    public event Action<AttackData> OnSwing;                      // active began: spawn smear here
+    public event Action<AttackData> OnSwing;                      // active began: spawn smear / count ammo
     public event Action<HitResult> OnHitLanded;
     public event Action<HitResult> OnHitReceived;
 
@@ -120,6 +145,7 @@ public class CombatStateMachine : MonoBehaviour
     void Awake()
     {
         Stats = GetComponent<CombatStats>();
+        Body = GetComponent<Rigidbody2D>();
         if (!animator) animator = GetComponentInChildren<Animator>();
         filter = new ContactFilter2D { useTriggers = true };
         filter.SetLayerMask(hurtboxMask);
@@ -127,10 +153,13 @@ public class CombatStateMachine : MonoBehaviour
 
     // ================= Intents =================
 
-    /// <summary>World-space direction to face (e.g. toward the mouse). Turning is limited by state.</summary>
-    public void SetAim(Vector2 dir)
+    /// <summary>World-space vector toward what to face (e.g. mouse - position). Its length sets AimDistance.</summary>
+    public void SetAim(Vector2 toAim)
     {
-        if (dir.sqrMagnitude > 0.0001f) aimTarget = dir.normalized;
+        float m = toAim.magnitude;
+        if (m < 0.0001f) return;
+        aimTarget = toAim / m;
+        AimDistance = m;
     }
 
     public void RequestAttack(AttackData attack)
@@ -139,9 +168,10 @@ public class CombatStateMachine : MonoBehaviour
         bufferedIntent = Intent.Attack; bufferedAttack = attack; bufferTimer = inputBufferTime;
     }
 
-    /// <summary>Dodge along a direction (usually movement input). Zero = backstep away from facing.</summary>
+    /// <summary>Dodge along a direction (usually movement input). Zero = backstep away from facing. Riders can't dodge.</summary>
     public void RequestDodge(Vector2 dir)
     {
+        if (isMounted) return;
         bufferedIntent = Intent.Dodge;
         bufferedDodgeDir = dir.sqrMagnitude > 0.01f ? dir.normalized : -Facing;
         bufferTimer = inputBufferTime;
@@ -190,12 +220,13 @@ public class CombatStateMachine : MonoBehaviour
                 if (StateTime >= CurrentAttack.windup)
                 {
                     Enter(CombatState.Active);
+                    if (CurrentAttack.projectile) FireProjectiles();
                     OnSwing?.Invoke(CurrentAttack);
                 }
                 break;
 
             case CombatState.Active:
-                SweepHitbox();
+                if (!CurrentAttack.projectile) SweepHitbox();
                 if (State == CombatState.Active && StateTime >= CurrentAttack.active) Enter(CombatState.Recovery);
                 break;
 
@@ -273,6 +304,18 @@ public class CombatStateMachine : MonoBehaviour
         Play("Dodge", 0f);
     }
 
+    void FireProjectiles()
+    {
+        var a = CurrentAttack;
+        int count = Mathf.Max(1, a.projectileCount);
+        Vector2 origin = (Vector2)transform.position + Facing * 0.35f;
+        for (int i = 0; i < count; i++)
+        {
+            float spread = count > 1 ? Mathf.Lerp(-a.spreadAngle * 0.5f, a.spreadAngle * 0.5f, i / (float)(count - 1)) : 0f;
+            Projectile.Launch(this, a, outgoingDamageMultiplier, origin, Rotate(Facing, spread), AimDistance);
+        }
+    }
+
     void SweepHitbox()
     {
         Vector2 origin = transform.position;
@@ -302,11 +345,16 @@ public class CombatStateMachine : MonoBehaviour
         }
     }
 
+    /// <summary>For hits delivered by something other than this unit's own swing (arrows, cavalry charges).</summary>
+    public void ReportHitLanded(HitResult result) => OnHitLanded?.Invoke(result);
+
     // ================= Receiving hits =================
 
-    public HitResult ReceiveHit(CombatStateMachine attacker, AttackData attack, float damageMultiplier = 1f)
+    /// <param name="fromPoint">Where the blow came from, for blocking and knockback. Defaults to the attacker's position.</param>
+    public HitResult ReceiveHit(CombatStateMachine attacker, AttackData attack, float damageMultiplier = 1f, Vector2? fromPoint = null)
     {
-        Vector2 toAttacker = (Vector2)(attacker.transform.position - transform.position);
+        Vector2 source = fromPoint ?? (Vector2)attacker.transform.position;
+        Vector2 toAttacker = source - (Vector2)transform.position;
         var result = new HitResult
         {
             attacker = attacker,
@@ -317,6 +365,13 @@ public class CombatStateMachine : MonoBehaviour
 
         if (State == CombatState.Dead) { result.type = HitType.Ignored; return result; }
         if (IsInvulnerable) { result.type = HitType.Dodged; return result; }
+
+        if (isPlayer && attacker && attacker != this && !attacker.isPlayer && attacker.team == team)
+            damageMultiplier *= AllyHitsOnPlayerMultiplier;
+
+        float dmgMult = damageMultiplier * (isMounted ? attack.vsMountedDamageMultiplier : 1f);
+        float poiseMult = damageMultiplier * (isMounted ? attack.vsMountedPoiseMultiplier : 1f);
+        float kbMult = Mathf.Clamp(damageMultiplier, 0.3f, 1.5f);
 
         bool facing = Vector2.Angle(Facing, toAttacker) <= blockAngle * 0.5f;
 
@@ -329,9 +384,9 @@ public class CombatStateMachine : MonoBehaviour
             }
             else
             {
-                Stats.TakeDamage(attack.damage * blockChipDamage * damageMultiplier);
-                ApplyKnockback(result.direction, attack.knockback * 0.5f);
-                if (Stats.DrainStamina(attack.blockStaminaDamage))
+                Stats.TakeDamage(attack.damage * blockChipDamage * dmgMult);
+                ApplyKnockback(result.direction, attack.knockback * 0.5f * kbMult);
+                if (Stats.DrainStamina(attack.blockStaminaDamage * blockStaminaMultiplier * damageMultiplier))
                 {
                     result.type = HitType.GuardBroken;
                     Stagger(guardBreakDuration, result.direction);
@@ -351,15 +406,15 @@ public class CombatStateMachine : MonoBehaviour
         bool counter = State == CombatState.Windup || State == CombatState.Recovery;
         result.type = counter ? HitType.CounterHit : HitType.Hit;
 
-        Stats.TakeDamage(attack.damage * damageMultiplier);
-        ApplyKnockback(result.direction, attack.knockback);
+        Stats.TakeDamage(attack.damage * dmgMult);
+        ApplyKnockback(result.direction, attack.knockback * kbMult);
 
         if (Stats.IsDead)
         {
             Enter(CombatState.Dead);
             Play("Death", 0f);
         }
-        else if (Stats.TakePoiseDamage(attack.poiseDamage * damageMultiplier * (counter ? counterHitPoiseMultiplier : 1f)))
+        else if (Stats.TakePoiseDamage(attack.poiseDamage * poiseMult * (counter ? counterHitPoiseMultiplier : 1f)))
         {
             Stagger(staggerDuration, result.direction);
         }
@@ -430,7 +485,7 @@ public class CombatStateMachine : MonoBehaviour
         else animator.Play(hash, 0, 0f);
     }
 
-    static Vector2 Rotate(Vector2 v, float degrees)
+    public static Vector2 Rotate(Vector2 v, float degrees)
     {
         float r = degrees * Mathf.Deg2Rad;
         float c = Mathf.Cos(r), s = Mathf.Sin(r);
@@ -443,7 +498,7 @@ public class CombatStateMachine : MonoBehaviour
         Gizmos.color = Color.yellow;
         Gizmos.DrawLine(o, o + (Vector3)Facing);
 
-        if (State != CombatState.Active || !CurrentAttack) return;
+        if (State != CombatState.Active || !CurrentAttack || CurrentAttack.projectile) return;
         Gizmos.color = Color.red;
         float half = CurrentAttack.arcAngle * 0.5f;
         Vector3 prev = o + (Vector3)(Rotate(Facing, -half) * CurrentAttack.reach);

@@ -1,0 +1,35 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 80823f298127f4f068034ba5426367ac, type: 3}
+  m_Name: 5_Champion
+  m_EditorClassIdentifier: Assembly-CSharp::CombatSkill
+  tierName: Champion
+  rankPips: 5
+  xpToReach: 350
+  healthMultiplier: 1.35
+  staminaMultiplier: 1.3
+  poiseMultiplier: 1.5
+  damageMultiplier: 1.25
+  moveSpeedMultiplier: 1.12
+  readChance: 0.96
+  reactionTime: {x: 0.1, y: 0.2}
+  timingError: 0.03
+  blockChance: 0.5
+  parryChance: 0.55
+  dodgeChance: 0.4
+  dodgeUnblockableChance: 0.92
+  punishChance: 0.9
+  tacticalChance: 0.9
+  rangeJudgement: {x: 0.75, y: 0.85}
+  aimError: 3
+  attackCadence: {x: 0.15, y: 0.45}
+  staminaReserve: 40

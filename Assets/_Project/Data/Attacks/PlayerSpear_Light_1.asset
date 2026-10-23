@@ -1,0 +1,43 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3782cc04ff3d1463eb14672d42d3b21f, type: 3}
+  m_Name: PlayerSpear_Light_1
+  m_EditorClassIdentifier: Assembly-CSharp::AttackData
+  animatorState: Attack_Light_1
+  crossFade: 0
+  windup: 0.2
+  active: 0.08
+  recovery: 0.35
+  cancelPoint: 0.5
+  nextInCombo: {fileID: 0}
+  damage: 13
+  poiseDamage: 15
+  staminaCost: 10
+  blockStaminaDamage: 12
+  blockable: 1
+  parryable: 1
+  allyDamageMultiplier: 0.5
+  vsMountedDamageMultiplier: 2.5
+  vsMountedPoiseMultiplier: 3
+  reach: 2.2
+  arcAngle: 30
+  projectile: {fileID: 0}
+  projectileCount: 1
+  spreadAngle: 0
+  windupTurnSpeed: 600
+  lungeDistance: 0.3
+  knockback: 0.5
+  telegraph: 0
+  telegraphSound: {fileID: 0}
+  hitStopFrames: 3
+  screenShake: 0.07
+  smearPrefab: {fileID: 0}

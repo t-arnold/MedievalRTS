@@ -1,0 +1,43 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3782cc04ff3d1463eb14672d42d3b21f, type: 3}
+  m_Name: Spear_Brace
+  m_EditorClassIdentifier: Assembly-CSharp::AttackData
+  animatorState: 
+  crossFade: 0
+  windup: 0
+  active: 0
+  recovery: 0
+  cancelPoint: 0.6
+  nextInCombo: {fileID: 0}
+  damage: 45
+  poiseDamage: 130
+  staminaCost: 0
+  blockStaminaDamage: 0
+  blockable: 0
+  parryable: 0
+  allyDamageMultiplier: 0
+  vsMountedDamageMultiplier: 1
+  vsMountedPoiseMultiplier: 1
+  reach: 2.3
+  arcAngle: 60
+  projectile: {fileID: 0}
+  projectileCount: 1
+  spreadAngle: 0
+  windupTurnSpeed: 360
+  lungeDistance: 0
+  knockback: 0.3
+  telegraph: 0
+  telegraphSound: {fileID: 0}
+  hitStopFrames: 8
+  screenShake: 0.45
+  smearPrefab: {fileID: 0}

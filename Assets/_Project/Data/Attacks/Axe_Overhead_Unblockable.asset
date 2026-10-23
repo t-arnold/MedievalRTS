@@ -1,0 +1,43 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3782cc04ff3d1463eb14672d42d3b21f, type: 3}
+  m_Name: Axe_Overhead_Unblockable
+  m_EditorClassIdentifier: Assembly-CSharp::AttackData
+  animatorState: Attack_Overhead
+  crossFade: 0
+  windup: 1
+  active: 0.14
+  recovery: 1
+  cancelPoint: 1
+  nextInCombo: {fileID: 0}
+  damage: 32
+  poiseDamage: 65
+  staminaCost: 26
+  blockStaminaDamage: 0
+  blockable: 0
+  parryable: 0
+  allyDamageMultiplier: 0.5
+  vsMountedDamageMultiplier: 1
+  vsMountedPoiseMultiplier: 1
+  reach: 1.3
+  arcAngle: 70
+  projectile: {fileID: 0}
+  projectileCount: 1
+  spreadAngle: 0
+  windupTurnSpeed: 100
+  lungeDistance: 0.5
+  knockback: 1.4
+  telegraph: 1
+  telegraphSound: {fileID: 0}
+  hitStopFrames: 7
+  screenShake: 0.3
+  smearPrefab: {fileID: 0}

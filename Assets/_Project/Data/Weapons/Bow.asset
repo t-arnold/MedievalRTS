@@ -1,0 +1,29 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 493de480fcc1c4d1f898a8fe88975744, type: 3}
+  m_Name: Bow
+  m_EditorClassIdentifier: Assembly-CSharp::WeaponData
+  weaponName: Bow
+  look: 3
+  aiAttacks:
+  - {fileID: 11400000, guid: 2fd77cf62be9840f3af2e488f2a29926, type: 2}
+  playerLight: {fileID: 11400000, guid: de2892d0854c145feb1861381bd6f4c0, type: 2}
+  playerHeavy: {fileID: 11400000, guid: cab74daa5f96e4a75aefc17fc068e11f, type: 2}
+  rangedAttack: {fileID: 11400000, guid: b49c5d8fd659c4481a485d9d141403ff, type: 2}
+  ammo: 24
+  preferredRange: 11
+  hasShield: 0
+  blockAngle: 90
+  blockChipDamage: 0.35
+  blockStaminaMultiplier: 1.7
+  bracesVsCavalry: 0
+  braceAttack: {fileID: 0}

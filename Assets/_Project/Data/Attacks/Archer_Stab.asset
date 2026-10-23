@@ -1,0 +1,43 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3782cc04ff3d1463eb14672d42d3b21f, type: 3}
+  m_Name: Archer_Stab
+  m_EditorClassIdentifier: Assembly-CSharp::AttackData
+  animatorState: Attack_Stab
+  crossFade: 0
+  windup: 0.4
+  active: 0.1
+  recovery: 0.5
+  cancelPoint: 1
+  nextInCombo: {fileID: 0}
+  damage: 9
+  poiseDamage: 14
+  staminaCost: 10
+  blockStaminaDamage: 10
+  blockable: 1
+  parryable: 1
+  allyDamageMultiplier: 0.5
+  vsMountedDamageMultiplier: 1
+  vsMountedPoiseMultiplier: 1
+  reach: 1.1
+  arcAngle: 90
+  projectile: {fileID: 0}
+  projectileCount: 1
+  spreadAngle: 0
+  windupTurnSpeed: 240
+  lungeDistance: 0.3
+  knockback: 0.3
+  telegraph: 0
+  telegraphSound: {fileID: 0}
+  hitStopFrames: 2
+  screenShake: 0.05
+  smearPrefab: {fileID: 0}

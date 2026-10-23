@@ -6,7 +6,8 @@ using UnityEngine.InputSystem;
 /// Works alone for learning step 1 (leave Combat empty), then plug in CombatStateMachine.
 ///
 /// Controls: WASD move, Shift sprint, aim with mouse, LMB light attack, E heavy attack,
-///           RMB block, Space dodge. Gamepad: left stick move, right stick aim.
+///           RMB block, Space dodge, Q switch weapon. Gamepad: left stick move, right stick aim.
+/// With the bow, arrows land where the mouse is.
 ///
 /// Setup: Rigidbody2D (added automatically, configured in Awake), a small Collider2D at the feet,
 /// sprite pivot at the feet, Animator floats "Speed", "DirX", "DirY".
@@ -22,6 +23,9 @@ public class PlayerController : MonoBehaviour
     public AttackData lightAttack;
     public AttackData heavyAttack;
 
+    [Header("Weapons (Q cycles)")]
+    public WeaponData[] weapons;
+
     [Header("Movement (world units/sec)")]
     public float walkSpeed = 1.5f;
     public float runSpeed = 3.5f;
@@ -32,9 +36,14 @@ public class PlayerController : MonoBehaviour
     [Header("Aim")]
     [Tooltip("Right-stick deflection needed before the gamepad overrides the mouse.")]
     public float stickDeadzone = 0.3f;
+    [Tooltip("Arc distance used when aiming with the right stick.")]
+    public float stickAimDistance = 9f;
+
+    public int WeaponIndex { get; private set; }
+    public WeaponData CurrentWeapon => weapons != null && weapons.Length > 0 ? weapons[WeaponIndex] : null;
 
     Rigidbody2D rb;
-    InputAction move, aimStick, sprint, attack, heavy, block, dodge;
+    InputAction move, aimStick, sprint, attack, heavy, block, dodge, switchWeapon;
     Vector2 velocity;
     Vector2 facing = Vector2.down; // used only when there is no CombatStateMachine
 
@@ -68,6 +77,7 @@ public class PlayerController : MonoBehaviour
         heavy  = Button("Heavy",  "<Keyboard>/e",         "<Gamepad>/rightTrigger");
         block  = Button("Block",  "<Mouse>/rightButton",  "<Gamepad>/leftTrigger");
         dodge  = Button("Dodge",  "<Keyboard>/space",     "<Gamepad>/buttonEast");
+        switchWeapon = Button("SwitchWeapon", "<Keyboard>/q", "<Gamepad>/buttonNorth");
     }
 
     static InputAction Button(string name, string kb, string pad)
@@ -77,9 +87,26 @@ public class PlayerController : MonoBehaviour
         return a;
     }
 
-    InputAction[] All => new[] { move, aimStick, sprint, attack, heavy, block, dodge };
+    InputAction[] All => new[] { move, aimStick, sprint, attack, heavy, block, dodge, switchWeapon };
     void OnEnable()  { foreach (var a in All) a.Enable(); }
     void OnDisable() { foreach (var a in All) a.Disable(); }
+
+    /// <summary>Switch to weapon i (wraps around). Applies its attacks and shield stats.</summary>
+    public void Equip(int i)
+    {
+        if (weapons == null || weapons.Length == 0) return;
+        int n = weapons.Length;
+        WeaponIndex = ((i % n) + n) % n;
+        var w = weapons[WeaponIndex];
+        if (!w) return;
+
+        lightAttack = w.playerLight ? w.playerLight : (w.aiAttacks != null && w.aiAttacks.Length > 0 ? w.aiAttacks[0] : lightAttack);
+        heavyAttack = w.playerHeavy ? w.playerHeavy : lightAttack;
+
+        var lo = GetComponent<UnitLoadout>();
+        if (lo) lo.Equip(w, unlimitedAmmo: true);
+        else UnitLoadout.ApplyWeapon(combat, w);
+    }
 
     void Update()
     {
@@ -88,7 +115,8 @@ public class PlayerController : MonoBehaviour
 
         // ---- aim: right stick if held, otherwise toward the mouse ----
         Vector2 aim = aimStick.ReadValue<Vector2>();
-        if (aim.magnitude < stickDeadzone && Mouse.current != null && cam)
+        if (aim.magnitude >= stickDeadzone) aim = aim.normalized * stickAimDistance;
+        else if (Mouse.current != null && cam)
         {
             Vector2 mouseWorld = cam.ScreenToWorldPoint(Mouse.current.position.ReadValue());
             aim = mouseWorld - (Vector2)transform.position;
@@ -96,6 +124,9 @@ public class PlayerController : MonoBehaviour
 
         if (combat)
         {
+            bool free = combat.State == CombatState.Idle || combat.State == CombatState.Blocking;
+            if (switchWeapon.WasPressedThisFrame() && free) Equip(WeaponIndex + 1);
+
             combat.SetAim(aim);
             combat.SetBlock(block.IsPressed());
             if (attack.WasPressedThisFrame()) combat.RequestAttack(lightAttack);

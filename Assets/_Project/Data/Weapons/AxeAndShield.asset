@@ -1,0 +1,31 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 493de480fcc1c4d1f898a8fe88975744, type: 3}
+  m_Name: AxeAndShield
+  m_EditorClassIdentifier: Assembly-CSharp::WeaponData
+  weaponName: Axe & Shield
+  look: 1
+  aiAttacks:
+  - {fileID: 11400000, guid: 06da34b6d690146f9a3418ec15d4361c, type: 2}
+  - {fileID: 11400000, guid: c71f23f4f2c7e4e7fa6fb37752c6e91c, type: 2}
+  - {fileID: 11400000, guid: 59287e028dd3c4d4db392a09d84931dc, type: 2}
+  playerLight: {fileID: 11400000, guid: b992f508b0a0647fb92d77d9f9497ee4, type: 2}
+  playerHeavy: {fileID: 11400000, guid: 84a5b5c18537241569fa385f26da0e6e, type: 2}
+  rangedAttack: {fileID: 0}
+  ammo: 24
+  preferredRange: 10
+  hasShield: 1
+  blockAngle: 130
+  blockChipDamage: 0.12
+  blockStaminaMultiplier: 1
+  bracesVsCavalry: 0
+  braceAttack: {fileID: 0}

@@ -1,0 +1,35 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 80823f298127f4f068034ba5426367ac, type: 3}
+  m_Name: 0_Levy
+  m_EditorClassIdentifier: Assembly-CSharp::CombatSkill
+  tierName: Levy
+  rankPips: 0
+  xpToReach: 0
+  healthMultiplier: 0.85
+  staminaMultiplier: 0.8
+  poiseMultiplier: 0.8
+  damageMultiplier: 0.85
+  moveSpeedMultiplier: 0.9
+  readChance: 0.45
+  reactionTime: {x: 0.35, y: 0.6}
+  timingError: 0.12
+  blockChance: 0.55
+  parryChance: 0.02
+  dodgeChance: 0.1
+  dodgeUnblockableChance: 0.3
+  punishChance: 0.1
+  tacticalChance: 0
+  rangeJudgement: {x: 0.7, y: 1.35}
+  aimError: 25
+  attackCadence: {x: 0.8, y: 1.6}
+  staminaReserve: 5
