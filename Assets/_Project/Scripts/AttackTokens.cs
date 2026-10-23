@@ -2,13 +2,11 @@ using System.Collections.Generic;
 using UnityEngine;
 
 /// <summary>
-/// Put this on the PLAYER (or anything that can be ganged up on). Enemies must hold a token
-/// to start an attack on it, which caps simultaneous attackers and spaces out their timing.
-///
-/// Enemy usage:
-///   if (tokens.TryAcquire(this)) combat.RequestAttack(attack);
-///   // release when the swing finishes, or when staggered/killed:
-///   combat.OnStateChanged += (from, to) => { if (to == CombatState.Idle || to == CombatState.Staggered || to == CombatState.Dead) tokens.Release(this); };
+/// Put this on anything that can be ganged up on (TestArena adds it to everyone).
+/// - Attack tokens: an attacker must hold one to swing, which caps simultaneous attackers and
+///   spaces out their timing.
+/// - Engagement count: how many AIs currently have this as their target, so AIs can spread out
+///   across targets instead of all piling onto one (e.g. the player).
 /// </summary>
 public class AttackTokens : MonoBehaviour
 {
@@ -17,9 +15,11 @@ public class AttackTokens : MonoBehaviour
     public Vector2 gapBetweenGrants = new Vector2(0.35f, 0.9f);
 
     readonly HashSet<Object> holders = new HashSet<Object>();
+    readonly HashSet<Object> engaged = new HashSet<Object>();
     float nextGrantTime;
 
     public int ActiveAttackers => holders.Count;
+    public int EngagedCount => engaged.Count;
 
     public bool TryAcquire(Object who)
     {
@@ -32,5 +32,12 @@ public class AttackTokens : MonoBehaviour
 
     public void Release(Object who) => holders.Remove(who);
 
-    void LateUpdate() => holders.RemoveWhere(h => h == null); // destroyed enemies
+    public void Engage(Object who) => engaged.Add(who);
+    public void Disengage(Object who) => engaged.Remove(who);
+
+    void LateUpdate()
+    {
+        holders.RemoveWhere(h => h == null); // destroyed attackers
+        engaged.RemoveWhere(h => h == null);
+    }
 }

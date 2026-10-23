@@ -41,6 +41,18 @@ public class CombatStats : MonoBehaviour
         Health = maxHealth; Stamina = maxStamina; Poise = maxPoise;
     }
 
+    /// <summary>Change maximums (e.g. on promotion) while keeping current values at the same fraction.</summary>
+    public void Rescale(float newMaxHealth, float newMaxStamina, float newMaxPoise)
+    {
+        float h = maxHealth > 0f ? Health / maxHealth : 1f;
+        float s = maxStamina > 0f ? Stamina / maxStamina : 1f;
+        float p = maxPoise > 0f ? Poise / maxPoise : 1f;
+        maxHealth = newMaxHealth; maxStamina = newMaxStamina; maxPoise = newMaxPoise;
+        if (!IsDead) Health = Mathf.Max(1f, maxHealth * h);
+        Stamina = maxStamina * s;
+        Poise = maxPoise * p;
+    }
+
     public void Tick(float dt)
     {
         if (IsDead) return;

@@ -33,6 +33,8 @@ public class CombatStateMachine : MonoBehaviour
     public LayerMask hurtboxMask = ~0;
     [Tooltip("Same number = same side.")]
     public int team;
+    [Tooltip("Scales damage and poise damage this combatant deals (set by experience tier).")]
+    public float outgoingDamageMultiplier = 1f;
 
     [Header("Aim")]
     public float turnSpeed = 1080f;
@@ -291,7 +293,7 @@ public class CombatStateMachine : MonoBehaviour
             if (mult <= 0f) continue;
 
             hitThisSwing.Add(target);
-            HitResult result = target.ReceiveHit(this, CurrentAttack, mult);
+            HitResult result = target.ReceiveHit(this, CurrentAttack, mult * outgoingDamageMultiplier);
             if (result.type == HitType.Ignored || result.type == HitType.Dodged) continue;
 
             OnHitLanded?.Invoke(result);

@@ -375,11 +375,26 @@ MonoBehaviour:
   - {fileID: 11400000, guid: fe2cadce042f745fe905b9c1b4a06e5c, type: 2}
   - {fileID: 11400000, guid: 9065e7c172a34460db98cd3eacc6ff41, type: 2}
   - {fileID: 11400000, guid: 7f6dffde40c6a495480c8e4a2d153774, type: 2}
+  skillLadder:
+  - {fileID: 11400000, guid: e8e06c5b310514937bb2d1e154b43168, type: 2}
+  - {fileID: 11400000, guid: 1ecedd869918941e9b78e9e49de5e4f0, type: 2}
+  - {fileID: 11400000, guid: 45886b10e0a26451d9957de1bf67a43b, type: 2}
+  - {fileID: 11400000, guid: 9be3a37d58f2241bea981de8f767906f, type: 2}
+  - {fileID: 11400000, guid: d7024c830c0514f3394a6c78cad624fe, type: 2}
+  - {fileID: 11400000, guid: fbde508e54ea24f44b0e5331f64e5784, type: 2}
   arenaSize: {x: 30, y: 20}
   startingEnemies: 4
+  startingEnemyTier: 2
   pillars: 6
   skirmishPerSide: 12
   bigBattlePerSide: 100
+  battleTierWeights:
+  - 40
+  - 30
+  - 18
+  - 9
+  - 3
+  - 0
   playerHealth: 120
   maxSimultaneousAttackersOnPlayer: 2
 --- !u!4 &2102130810

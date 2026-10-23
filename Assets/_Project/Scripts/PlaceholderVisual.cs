@@ -63,8 +63,12 @@ public class PlaceholderVisual : MonoBehaviour
 
     CombatStateMachine csm;
     SpriteRenderer body, pointer, shield, warning;
+    readonly SpriteRenderer[] pips = new SpriteRenderer[5];
     LineRenderer arc;
-    float flashTimer, deadTimer;
+    float flashTimer, deadTimer, promoteTimer;
+    SoldierAI ai;
+    bool aiLooked;
+    int lastPips = -1;
 
     static readonly Color WindupTint = new Color(1f, 0.85f, 0.3f);
     static readonly Color RecoveryTint = new Color(0.45f, 0.45f, 0.45f);
@@ -85,6 +89,14 @@ public class PlaceholderVisual : MonoBehaviour
         warning = PlaceholderArt.MakeRenderer(transform, "UnblockableFlag", PlaceholderArt.Circle, new Color(1f, 0.1f, 0.1f), new Vector2(0.25f, 0.25f));
         warning.transform.localPosition = new Vector3(0f, 1.05f, 0f);
         warning.enabled = false;
+
+        // Rank pips above the head: one gold square per experience tier above Levy.
+        for (int i = 0; i < pips.Length; i++)
+        {
+            pips[i] = PlaceholderArt.MakeRenderer(transform, "Pip" + i, PlaceholderArt.Square, new Color(1f, 0.82f, 0.25f), new Vector2(0.09f, 0.09f));
+            pips[i].transform.localPosition = new Vector3((i - 2) * 0.13f, 0.85f, 0f);
+            pips[i].enabled = false;
+        }
 
         var arcGo = new GameObject("AttackArc");
         arcGo.transform.SetParent(transform, false);
@@ -160,6 +172,15 @@ public class PlaceholderVisual : MonoBehaviour
             _ => teamColor,
         };
         if (flashTimer > 0f) { flashTimer -= Time.deltaTime; c = Color.white; }
+
+        // ---- rank pips + gold flash on promotion ----
+        if (!aiLooked) { ai = GetComponent<SoldierAI>(); aiLooked = true; }
+        int rank = ai && ai.skill && csm.State != CombatState.Dead ? ai.skill.rankPips : 0;
+        if (lastPips >= 0 && rank > lastPips) promoteTimer = 0.5f;
+        if (csm.State != CombatState.Dead) lastPips = rank;
+        for (int i = 0; i < pips.Length; i++) pips[i].enabled = i < rank;
+        if (promoteTimer > 0f) { promoteTimer -= Time.deltaTime; c = new Color(1f, 0.85f, 0.2f); }
+
         body.color = c;
 
         DrawArc();
@@ -169,6 +190,7 @@ public class PlaceholderVisual : MonoBehaviour
         body.sortingOrder = order;
         pointer.sortingOrder = shield.sortingOrder = order + 1;
         warning.sortingOrder = order + 2;
+        foreach (var p in pips) p.sortingOrder = order + 2;
         arc.sortingOrder = order - 1;
 
         if (csm.State == CombatState.Dead && !GetComponent<PlayerController>())
